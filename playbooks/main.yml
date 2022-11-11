@@ -1,0 +1,44 @@
+---
+- hosts: all
+  become: true
+  tasks:
+    - name: Install basic packages
+      apt:
+        name:
+          - ca-certificates
+          - curl
+          - python3
+          - python3-pip
+          - git
+          - bind9-dyndb-ldap
+        state: present
+        update_cache: True
+
+    - name: "generate SSH key"
+      openssh_keypair:
+        path: "/home/vagrant/.ssh/id_rsa"
+        type: rsa
+        size: 4096
+        state: present
+        force: no
+
+    - name: "Own the id_rsa* file"
+      file:
+        path: "/home/vagrant/{{ item }}"
+        owner: vagrant
+        group: vagrant
+        mode: 0400
+      with_items:
+        - .ssh/id_rsa
+        - .ssh/id_rsa.pub
+
+    - name: Specifying a path directly
+      fetch:
+        src: "/home/vagrant/.ssh/id_rsa.pub"
+        dest: id_rsa.pub
+        flat: yes
+
+    - name: "Set timezone to Europe/Moscow"
+      community.general.timezone:
+        name: Europe/Moscow
+        
